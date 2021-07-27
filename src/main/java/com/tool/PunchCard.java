@@ -140,7 +140,7 @@ public class PunchCard {
         ChromeOptions options = new ChromeOptions();
         List<String> addArguments = new ArrayList<>();
         //隱藏視窗作業
-        addArguments.add("--headless");
+//        addArguments.add("--headless");
         // 無痕模式
 //        addArguments.add("--incognito");
         //視窗最大化
@@ -166,8 +166,7 @@ public class PunchCard {
             Thread.sleep(3000);
             webElement = webDriver.findElement(By.xpath("//button[@id='login-button']"));
             webElement.click();
-            Thread.sleep(3000);
-            new WebDriverWait(webDriver, 10).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//*[@id=\"mm-0\"]/div[3]/div/div[2]/div[4]/div[2]/div[1]/div[1]/div")));
+            Thread.sleep(10000);
             webElement = webDriver.findElement(By.xpath("/html/body/div[1]/div[3]/div/div[2]/div[4]/div[2]/div[1]/div[1]/div/div[2]/div[1]/div[2]/div"));
             webElement.click();
             Set<Cookie> cookieSet = webDriver.manage().getCookies();
