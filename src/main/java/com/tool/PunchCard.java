@@ -8,6 +8,8 @@ import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,7 +40,6 @@ public class PunchCard {
     }
 
     private void start() {
-        getTabCookie();
         HashMap<String, String> cookies = getCookie();
         HashMap<String, String> headers = getHeaders();
         if (cookies != null) {
@@ -139,7 +140,7 @@ public class PunchCard {
         ChromeOptions options = new ChromeOptions();
         List<String> addArguments = new ArrayList<>();
         //隱藏視窗作業
-        addArguments.add("--headless");
+//        addArguments.add("--headless");
         // 無痕模式
 //        addArguments.add("--incognito");
         //視窗最大化
@@ -152,20 +153,23 @@ public class PunchCard {
         options.setPageLoadStrategy(PageLoadStrategy.NONE);
         try {
             WebDriver webDriver = new ChromeDriver(capabilities);
-            webDriver.get("https://pro.104.com.tw/psc2");
+            webDriver.get("https://cloud.nueip.com/login");
             Thread.sleep(3000);
-            WebElement webElement = webDriver.findElement(By.cssSelector("input[name=\"帳號\"]"));
-            webElement.sendKeys(PunchCard.getSetting("account", String.class, ""));
+            WebElement webElement = webDriver.findElement(By.cssSelector("input[name=\"inputCompany\"]"));
+            webElement.sendKeys(PunchCard.getSetting("company", String.class, ""));
             Thread.sleep(3000);
-            webElement = webDriver.findElement(By.cssSelector("input[name=\"密碼\"]"));
+            webElement = webDriver.findElement(By.cssSelector("input[name=\"inputID\"]"));
+            webElement.sendKeys(PunchCard.getSetting("id", String.class, ""));
+            Thread.sleep(3000);
+            webElement = webDriver.findElement(By.cssSelector("input[name=\"inputPassword\"]"));
             webElement.sendKeys(PunchCard.getSetting("password", String.class, ""));
             Thread.sleep(3000);
-            webElement = webDriver.findElement(By.xpath("//label[@class='Login__rememberLabel']"));
+            webElement = webDriver.findElement(By.xpath("//button[@id='login-button']"));
             webElement.click();
             Thread.sleep(3000);
-            webElement = webDriver.findElement(By.xpath("//button[@class='BaseButton']"));
+            new WebDriverWait(webDriver, 10).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//*[@id=\"mm-0\"]/div[3]/div/div[2]/div[4]/div[2]/div[1]/div[1]/div")));
+            webElement = webDriver.findElement(By.xpath("/html/body/div[1]/div[3]/div/div[2]/div[4]/div[2]/div[1]/div[1]/div/div[2]/div[1]/div[1]/div"));
             webElement.click();
-            Thread.sleep(3000);
             Set<Cookie> cookieSet = webDriver.manage().getCookies();
             for (Cookie cookie : cookieSet) {
                 cookies.put(cookie.getName(), cookie.getValue());
