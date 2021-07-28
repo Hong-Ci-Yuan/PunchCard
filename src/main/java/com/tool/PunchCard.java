@@ -2,17 +2,17 @@ package com.tool;
 
 import com.tool.util.FileUtil;
 import com.tool.util.GeneralUtil;
+import com.tool.util.MathUtil;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.DesiredCapabilities;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -23,20 +23,27 @@ import java.util.*;
  */
 public class PunchCard {
     private static Properties properties;
+    private static Map<String, Boolean> isHoliday = new TreeMap<>();
 
     /**
      * 元件初始化
      *
      * @param iniFile iniFile
      */
-    public PunchCard(String iniFile) throws Exception {
+    public PunchCard(String iniFile, String csvFile) throws Exception {
         properties = FileUtil.loadProp(new File(iniFile), "UTF-8");
+        getIsHoliday(csvFile);
     }
 
     public static void main(String[] args) throws Exception {
         System.setProperty("https.protocols", "TLSv1.2");
-        PunchCard punchCard = new PunchCard(args[0]);
-        punchCard.start();
+        PunchCard punchCard = new PunchCard(args[0], args[1]);
+        String nowDateStr = new SimpleDateFormat("yyyy-M-dd").format(new Date());
+        if (isHoliday.containsKey(nowDateStr)) {
+            if (isHoliday.get(nowDateStr)) {
+                punchCard.start();
+            }
+        }
     }
 
     private void start() {
@@ -140,7 +147,7 @@ public class PunchCard {
         ChromeOptions options = new ChromeOptions();
         List<String> addArguments = new ArrayList<>();
         //隱藏視窗作業
-//        addArguments.add("--headless");
+        addArguments.add("--headless");
         // 無痕模式
 //        addArguments.add("--incognito");
         //視窗最大化
@@ -154,31 +161,61 @@ public class PunchCard {
         try {
             WebDriver webDriver = new ChromeDriver(capabilities);
             webDriver.get("https://cloud.nueip.com/login");
-            Thread.sleep(3000);
+            GeneralUtil.sleep(MathUtil.getRandomBetween(3000, 10000));
             WebElement webElement = webDriver.findElement(By.cssSelector("input[name=\"inputCompany\"]"));
             webElement.sendKeys(PunchCard.getSetting("company", String.class, ""));
-            Thread.sleep(3000);
+            GeneralUtil.sleep(MathUtil.getRandomBetween(3000, 10000));
             webElement = webDriver.findElement(By.cssSelector("input[name=\"inputID\"]"));
             webElement.sendKeys(PunchCard.getSetting("id", String.class, ""));
-            Thread.sleep(3000);
+            GeneralUtil.sleep(MathUtil.getRandomBetween(3000, 10000));
             webElement = webDriver.findElement(By.cssSelector("input[name=\"inputPassword\"]"));
             webElement.sendKeys(PunchCard.getSetting("password", String.class, ""));
-            Thread.sleep(3000);
+            GeneralUtil.sleep(MathUtil.getRandomBetween(5000, 15000));
             webElement = webDriver.findElement(By.xpath("//button[@id='login-button']"));
             webElement.click();
-            Thread.sleep(10000);
-            webElement = webDriver.findElement(By.xpath("/html/body/div[1]/div[3]/div/div[2]/div[4]/div[2]/div[1]/div[1]/div/div[2]/div[1]/div[2]/div"));
+            GeneralUtil.sleep(MathUtil.getRandomBetween(5000, 20000));
+            if (isGetOffWork()) {
+                webElement = webDriver.findElement(By.xpath("/html/body/div[1]/div[3]/div/div[2]/div[4]/div[2]/div[1]/div[1]/div/div[2]/div[1]/div[2]/div"));
+            } else {
+                webElement = webDriver.findElement(By.xpath("/html/body/div[1]/div[3]/div/div[2]/div[4]/div[2]/div[1]/div[1]/div/div[2]/div[1]/div[1]/div"));
+            }
             webElement.click();
             Set<Cookie> cookieSet = webDriver.manage().getCookies();
             for (Cookie cookie : cookieSet) {
                 cookies.put(cookie.getName(), cookie.getValue());
             }
-            Thread.sleep(3000);
+            GeneralUtil.sleep(MathUtil.getRandomBetween(3000, 10000));
             webDriver.quit();
         } catch (Exception e) {
             e.printStackTrace();
         }
         return cookies;
+    }
+
+    private boolean isGetOffWork() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, 17);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        Date getOffWorkDate = calendar.getTime();
+        Date now = new Date();
+        return now.after(getOffWorkDate);
+    }
+
+    private void getIsHoliday(String csvFile) throws Exception {
+        List<String> holidayList = FileUtil.loadFile(new File(csvFile), "Big5");
+        for (String holiday : holidayList) {
+            if (holiday.startsWith("date")) {
+                continue;
+            } else {
+                String[] holidayArray = holiday.split(",");
+                Boolean holidayBoolean = false;
+                if (holidayArray[2].equals("是")) {
+                    holidayBoolean = true;
+                }
+                isHoliday.put(holidayArray[0].replace("/", "-"), holidayBoolean);
+            }
+        }
     }
 
     /**
