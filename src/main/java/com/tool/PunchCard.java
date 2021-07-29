@@ -23,7 +23,7 @@ import java.util.*;
  */
 public class PunchCard {
     private static Properties properties;
-    private static Map<String, Boolean> isHoliday = new TreeMap<>();
+    private static Set<String> isHoliday = new HashSet<>();
 
     /**
      * 元件初始化
@@ -39,10 +39,8 @@ public class PunchCard {
         System.setProperty("https.protocols", "TLSv1.2");
         PunchCard punchCard = new PunchCard(args[0], args[1]);
         String nowDateStr = new SimpleDateFormat("yyyy-M-dd").format(new Date());
-        if (isHoliday.containsKey(nowDateStr)) {
-            if (isHoliday.get(nowDateStr)) {
-                punchCard.start();
-            }
+        if (!isHoliday.contains(nowDateStr)) {
+            punchCard.start();
         }
     }
 
@@ -147,7 +145,7 @@ public class PunchCard {
         ChromeOptions options = new ChromeOptions();
         List<String> addArguments = new ArrayList<>();
         //隱藏視窗作業
-        addArguments.add("--headless");
+//        addArguments.add("--headless");
         // 無痕模式
 //        addArguments.add("--incognito");
         //視窗最大化
@@ -209,11 +207,9 @@ public class PunchCard {
                 continue;
             } else {
                 String[] holidayArray = holiday.split(",");
-                Boolean holidayBoolean = false;
                 if (holidayArray[2].equals("是")) {
-                    holidayBoolean = true;
+                    isHoliday.add(holidayArray[0].replace("/", "-"));
                 }
-                isHoliday.put(holidayArray[0].replace("/", "-"), holidayBoolean);
             }
         }
     }
