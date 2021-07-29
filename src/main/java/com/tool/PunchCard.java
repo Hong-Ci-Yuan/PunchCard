@@ -30,14 +30,14 @@ public class PunchCard {
      *
      * @param iniFile iniFile
      */
-    public PunchCard(String iniFile, String csvFile) throws Exception {
+    public PunchCard(String iniFile) throws Exception {
         properties = FileUtil.loadProp(new File(iniFile), "UTF-8");
-        getIsHoliday(csvFile);
+        getIsHoliday();
     }
 
     public static void main(String[] args) throws Exception {
         System.setProperty("https.protocols", "TLSv1.2");
-        PunchCard punchCard = new PunchCard(args[0], args[1]);
+        PunchCard punchCard = new PunchCard(args[0]);
         String nowDateStr = new SimpleDateFormat("yyyy-M-dd").format(new Date());
         if (!isHoliday.contains(nowDateStr)) {
             punchCard.start();
@@ -200,8 +200,8 @@ public class PunchCard {
         return now.after(getOffWorkDate);
     }
 
-    private void getIsHoliday(String csvFile) throws Exception {
-        List<String> holidayList = FileUtil.loadFile(new File(csvFile), "Big5");
+    private void getIsHoliday() throws Exception {
+        List<String> holidayList = FileUtil.loadFile(new File(PunchCard.getSetting("holiday.file", String.class, "")), "Big5");
         for (String holiday : holidayList) {
             if (holiday.startsWith("date")) {
                 continue;
